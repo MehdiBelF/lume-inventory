@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>LUME Inventory OS</title>
+  <meta name="description" content="LUME private stock management: products, BL receiving, Socrate sales, Mediouna stock, users and history." />
+  <meta name="theme-color" content="#050505" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="authOverlay" class="auth-overlay">
+    <section id="setupPanel" class="auth-card hidden">
+      <div class="logo">L</div>
+      <p class="kicker">First secure setup</p>
+      <h1>Create the owner</h1>
+      <p class="muted">Only the first admin can create the workspace on this browser. After that, new users are created from inside the app.</p>
+      <label>Full name<input id="setupName" placeholder="Mehdi" autocomplete="name"></label>
+      <label>Email<input id="setupEmail" type="email" placeholder="mehdi@lume.ma" autocomplete="username"></label>
+      <label>Phone<input id="setupPhone" placeholder="06 XX XX XX XX" autocomplete="tel"></label>
+      <label>Password<input id="setupPassword" type="password" placeholder="Minimum 8 characters" autocomplete="new-password"></label>
+      <label>Confirm password<input id="setupPassword2" type="password" placeholder="Repeat password" autocomplete="new-password"></label>
+      <button id="setupBtn" class="primary">Create workspace</button>
+    </section>
+
+    <section id="loginPanel" class="auth-card hidden">
+      <div class="logo">L</div>
+      <p class="kicker">LUME private workspace</p>
+      <h1>Inventory OS</h1>
+      <p class="muted">Login with the account created by the administrator.</p>
+      <label>Email<input id="loginEmail" type="email" placeholder="your@email.com" autocomplete="username"></label>
+      <label>Password<input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"></label>
+      <button id="loginBtn" class="primary">Enter</button>
+    </section>
+  </div>
+
+  <div id="app" class="app hidden">
+    <header class="topbar">
+      <div class="brand"><span>L</span><div><strong>LUME Inventory OS</strong><small>Mediouna · Socrate · BL · Sales</small></div></div>
+      <div class="top-actions">
+        <button id="themeBtn" class="icon">◐</button>
+        <button id="logoutBtn" class="icon">↗</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div><p class="kicker">Live local stock</p><h2 id="helloTitle">Welcome</h2><p id="roleLine" class="muted"></p></div>
+      <button id="receiveBtn" class="hero-btn admin-only">+ New BL / Receive</button>
+    </section>
+
+    <section class="stats">
+      <div><b id="statProducts">0</b><span>Products</span></div>
+      <div><b id="statMed">0</b><span>Mediouna</span></div>
+      <div><b id="statSoc">0</b><span>Socrate</span></div>
+      <div><b id="statLow">0</b><span>Low / Out</span></div>
+    </section>
+
+    <section class="toolbar">
+      <div class="search"><span>⌕</span><input id="searchInput" placeholder="Search reference, name, category..." /></div>
+      <select id="categoryFilter"><option value="all">All categories</option></select>
+      <select id="stockFilter"><option value="all">All stock</option><option value="socrate">In Socrate</option><option value="mediouna">In Mediouna</option><option value="low">Low stock</option><option value="out">Out</option></select>
+    </section>
+
+    <main>
+      <div class="section-head"><strong id="resultInfo">Products</strong><div class="admin-actions admin-only"><button id="addProductBtn">+ Product</button><button id="usersBtn">Users</button><button id="exportBtn">Export</button><label>Import<input id="importInput" type="file" accept="application/json"></label></div></div>
+      <div id="grid" class="grid"></div>
+      <div id="empty" class="empty hidden">No product found</div>
+    </main>
+  </div>
+
+  <div id="productModal" class="modal-shell" aria-hidden="true">
+    <section class="modal product-modal">
+      <header><button data-close="productModal">‹</button><div><p id="pCat" class="kicker"></p><h3 id="pName"></h3><small id="pSku"></small></div></header>
+      <div class="product-layout">
+        <aside><div id="pImage" class="product-image"></div><div id="pAttrs" class="chips"></div></aside>
+        <section>
+          <div class="stock-panels"><div><span>Mediouna</span><b id="pMed">0</b></div><div><span>Socrate</span><b id="pSoc">0</b></div><div class="black"><span>Total</span><b id="pTot">0</b></div></div>
+          <div class="tabs"><button class="tab active" data-tab="sale">Sale</button><button class="tab admin-only" data-tab="edit">Edit</button><button class="tab" data-tab="history">History</button></div>
+          <div id="tab-sale" class="tab-body active">
+            <div class="box danger-box"><h4>Sell from Socrate</h4><label>Quantity sold<input id="saleQty" type="number" min="1" step="1"></label><label>Client / note<input id="saleNote" placeholder="Client, project, commercial..."></label><button id="confirmSaleBtn" class="danger">Confirm sale</button></div>
+            <div class="box admin-only"><h4>Transfer Mediouna → Socrate</h4><label>Quantity<input id="transferQty" type="number" min="1" step="1"></label><label>BL / note<input id="transferNote" placeholder="BL number, receiver..."></label><button id="confirmTransferBtn" class="primary">Transfer</button></div>
+            <div class="box admin-only"><h4>Direct adjustment</h4><div class="two"><label>Hub<select id="adjustHub"><option value="mediounaQty">Mediouna</option><option value="socrateQty">Socrate</option></select></label><label>New quantity<input id="adjustQty" type="number" min="0" step="1"></label></div><label>Reason<input id="adjustNote" placeholder="Inventory correction..."></label><button id="confirmAdjustBtn">Apply adjustment</button></div>
+          </div>
+          <div id="tab-edit" class="tab-body">
+            <div class="form-grid"><label>Reference / SKU<input id="editSku"></label><label>Name<input id="editName"></label><label>Category<input id="editCategory"></label><label>Image URL<input id="editImage"></label><label>Low alert<input id="editLow" type="number" min="0" step="1"></label><label>Price 1<input id="editPrice1"></label><label>Price 2<input id="editPrice2"></label><label>Price 3<input id="editPrice3"></label></div>
+            <button id="saveProductBtn" class="primary">Save product</button><button id="deleteProductBtn" class="danger outline">Delete product</button>
+          </div>
+          <div id="tab-history" class="tab-body"><div id="historyList" class="history"></div></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div id="receiveModal" class="modal-shell" aria-hidden="true">
+    <section class="modal wide">
+      <header><button data-close="receiveModal">‹</button><div><p class="kicker">Bulk stock entry</p><h3>New BL / Receive</h3></div></header>
+      <div class="receive-head"><label>BL number<input id="blNumber" placeholder="BL-001"></label><label>Date<input id="blDate" type="date"></label><label>Destination<select id="blHub"><option value="socrateQty">Socrate</option><option value="mediounaQty">Mediouna</option></select></label><label>Note<input id="blNote" placeholder="Supplier, project, receiver..."></label></div>
+      <div class="receive-tools"><input id="blSearch" placeholder="Search product to add to BL..."><button id="addBlRowBtn">Add selected</button></div>
+      <select id="blProductSelect" size="6"></select>
+      <div id="blRows" class="bl-rows"></div>
+      <button id="saveBlBtn" class="primary full">Save BL and add quantities</button>
+    </section>
+  </div>
+
+  <div id="usersModal" class="modal-shell" aria-hidden="true"><section class="modal wide"><header><button data-close="usersModal">‹</button><div><p class="kicker">Admin</p><h3>Users</h3></div></header><div class="form-grid"><label>Name<input id="newUserName"></label><label>Email<input id="newUserEmail" type="email"></label><label>Phone<input id="newUserPhone"></label><label>Role<select id="newUserRole"><option value="sales">Sales</option><option value="admin">Admin</option></select></label><label>Password<input id="newUserPassword" type="password" placeholder="Minimum 8 characters"></label></div><button id="createUserBtn" class="primary">Create user</button><div id="usersList" class="users-list"></div></section></div>
+
+  <div id="toast" class="toast"></div>
+  <script src="products-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
